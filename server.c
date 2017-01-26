@@ -7,6 +7,8 @@
 #include<unistd.h>
 #include<pthread.h>
 
+char **theArray;
+
 void *ServerEcho(void *args)
 {
 	int clientFileDescriptor=(int)args;
@@ -19,9 +21,15 @@ void *ServerEcho(void *args)
 	close(clientFileDescriptor);
 }
 
-
-int main()
+int main(int argc, char *argv[])
 {
+	if (argc != 3) {
+		printf("%s\n", "Invalid number of arguements, please enter 2 inputs");
+		exit(0);
+	}
+
+	theArray = malloc(argv[2] * sizeof(char **));
+
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	int clientFileDescriptor;
@@ -29,12 +37,12 @@ int main()
 	pthread_t t[20];
 
 	sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
-	sock_var.sin_port=3000;
+	sock_var.sin_port=argv[1];
 	sock_var.sin_family=AF_INET;
 	if(bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{
 		printf("nsocket has been created");
-		listen(serverFileDescriptor,2000); 
+		listen(serverFileDescriptor,2000);
 		while(1)        //loop infinity
 		{
 			for(i=0;i<20;i++)      //can support 20 clients at a time
