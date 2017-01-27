@@ -5,38 +5,49 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<unistd.h>
+#include"timer.h"
 
-#define READ = 0;
-#define WRITE = 1;
+#define READ 0
+#define WRITE 1
+#define thread_count 1000
+#define NUM_STR 50
 
-typedef struct message {
+int *seed;
+int clientFileDescriptor;
+
+typedef struct {
 	int arrayID;
 	int RW;
-	char * updateArray;
-} message_t
+} message_t;
 
 void *Operate(void* rank) {
 	long my_rank = (long) rank;
+	char server_msg[50];
 
 	// Find a random position in theArray for read or write
 	int pos = rand_r(&seed[my_rank]) % NUM_STR;
 	int randNum = rand_r(&seed[my_rank]) % 20;	// write with 5% probability
 
-	pthread_mutex_lock(&mutex);
+	// struct message_t *draft = malloc(sizeof(struct message));
+	message_t draft;
 
+	draft.arrayID = pos;
 	// 5% are write operations, others are reads
 	if (randNum >= 19) {
 		// Replace sprintf with a write function to server.c
-		sprintf(theArray[pos], "theArray[%i] modified by thread %ld", pos, my_rank);
+		draft.RW = WRITE;
+		write(clientFileDescriptor, &draft, sizeof(draft));
+		read(clientFileDescriptor, server_msg, 50);
 	}
 
 	else {
 		// Perform read operation
+		draft.RW = READ;
+		read(clientFileDescriptor, server_msg, 50);
 	}
 
 	printf("Thread %ld: randNum = %i\n", my_rank, randNum);
-	printf("%s\n\n", theArray[pos]); // return the value read or written
-	pthread_mutex_unlock(&mutex);
+	printf("%s\n\n", server_msg); // return the value read or written
 
 	return NULL;
 }
@@ -53,30 +64,32 @@ int main(int argc, char *argv[])
 	int i;
 	double start, finish, elapsed;
 
-	/* Get number of threads from command line */
-	thread_count = strtol(argv[1], NULL, 10);
-
 	/* Intializes random number generators */
 	seed = malloc(thread_count*sizeof(int));
 	for (i = 0; i < thread_count; i++)
 		seed[i] = i;
 
 	struct sockaddr_in sock_var;
-	int clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
-	char str_clnt[20],str_ser[20];
+	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 
 	sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
-	sock_var.sin_port=argv[1];
+	sock_var.sin_port= (int) argv[1];
 	sock_var.sin_family=AF_INET;
 
 	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{
 		printf("Connected to server %dn",clientFileDescriptor);
-		printf("nEnter Srting to send");
-		scanf("%s",str_clnt);
-		write(clientFileDescriptor,str_clnt,20);
-		read(clientFileDescriptor,str_ser,20);
-		printf("String from Server: %s",str_ser);
+
+		GET_TIME(start);
+		for (thread = 0; thread < thread_count; thread++)
+			pthread_create(&thread_handles[thread], NULL, Operate, (void*) thread);
+
+		for (thread = 0; thread < thread_count; thread++)
+			pthread_join(thread_handles[thread], NULL);
+		GET_TIME(finish);
+		elapsed = finish - start;
+	 	printf("The elapsed time is %e seconds\n", elapsed);
+
 		close(clientFileDescriptor);
 	}
 	else{

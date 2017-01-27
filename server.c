@@ -7,7 +7,9 @@
 #include<unistd.h>
 #include<pthread.h>
 
-char **theArray;
+#define NUM_STR 1000
+#define STR_LEN 50
+char theArray[NUM_STR][STR_LEN];
 
 void *ServerEcho(void *args)
 {
@@ -23,33 +25,33 @@ void *ServerEcho(void *args)
 
 int main(int argc, char *argv[])
 {
+	int array_size = (int) argv[2];
+
 	if (argc != 3) {
 		printf("%s\n", "Invalid number of arguements, please enter 2 inputs");
 		exit(0);
 	}
 
-	theArray = malloc(argv[2] * sizeof(char **));
-
 	struct sockaddr_in sock_var;
-	int serverFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
+	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
 	int clientFileDescriptor;
 	int i;
-	pthread_t t[20];
+	pthread_t t[1000];
 
-	sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
-	sock_var.sin_port=argv[1];
-	sock_var.sin_family=AF_INET;
+	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
+	sock_var.sin_port = (int) argv[1];
+	sock_var.sin_family = AF_INET;
 	if(bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{
 		printf("nsocket has been created");
 		listen(serverFileDescriptor,2000);
 		while(1)        //loop infinity
 		{
-			for(i=0;i<20;i++)      //can support 20 clients at a time
+			for(i=0; i < 1000; i++)      //can support 1000 clients at a time
 			{
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				printf("nConnected to client %dn",clientFileDescriptor);
-				pthread_create(&t,NULL,ServerEcho,(void *)clientFileDescriptor);
+				pthread_create(&t[i],NULL,ServerEcho,(void *)clientFileDescriptor);
 			}
 		}
 		close(serverFileDescriptor);
