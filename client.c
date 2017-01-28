@@ -10,11 +10,11 @@
 #define READ 0
 #define WRITE 1
 #define thread_count 3
-#define NUM_STR 50
+#define STR_LEN 50
 
 int *seed;
 int clientFileDescriptor;
-int arraySize;
+long array_size;
 
 typedef struct {
 	int arrayID;
@@ -38,13 +38,13 @@ void *Operate(void* rank) {
 		// Replace sprintf with a write function to server.c
 		draft.RW = WRITE;
 		write(clientFileDescriptor, &draft, sizeof(draft));
-		read(clientFileDescriptor, server_msg, NUM_STR);
+		read(clientFileDescriptor, server_msg, STR_LEN);
 	}
 
 	else {
 		// Perform read operation
 		draft.RW = READ;
-		read(clientFileDescriptor, server_msg, NUM_STR);
+		read(clientFileDescriptor, server_msg, STR_LEN);
 	}
 
 	printf("Thread %ld: randNum = %i\n", my_rank, randNum);
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	int i;
 	double start, finish, elapsed;
 
-	array_size = (int) argv[2];
+	array_size = (long) argv[2];
 
 	/* Intializes random number generators */
 	seed = malloc(thread_count*sizeof(int));
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 
 	sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
-	sock_var.sin_port= (int) argv[1];
+	sock_var.sin_port= (long) argv[1];
 	sock_var.sin_family=AF_INET;
 
 	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)

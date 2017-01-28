@@ -20,17 +20,17 @@ typedef struct {
 
 void *clientThreadHandler(void *args)
 {
-	int clientFileDescriptor=(int)args;
+	long clientFileDescriptor = (long)args;
 	message_t draft;
-	char str[50];
+	char str[STR_LEN];
 
-	read(clientFileDescriptor, draft, sizeof(draft));
+	read(clientFileDescriptor, &draft, sizeof(draft));
 	if (draft.RW == WRITE) {
-		str = "String " + draft.arrayID + " has been modified by a write request\n";
-		theArray[draft.arrayID] = str;
+		snprintf(str, STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
+		*theArray[draft.arrayID] = *str;
 	}
 	else {
-		str = theArray[draft.arrayID];
+		*str = *theArray[draft.arrayID];
 	}
 	printf("\nsending to client:%s\n",str);
 	write(clientFileDescriptor,str,NUM_STR);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	int array_size = (int) argv[2];
+	int array_size = (long) argv[2];
 
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	pthread_t t[1000];
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
-	sock_var.sin_port = (int) argv[1];
+	sock_var.sin_port = (long) argv[1];
 	sock_var.sin_family = AF_INET;
 	if(bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{
