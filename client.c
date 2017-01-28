@@ -9,11 +9,12 @@
 
 #define READ 0
 #define WRITE 1
-#define thread_count 1000
+#define thread_count 3
 #define NUM_STR 50
 
 int *seed;
 int clientFileDescriptor;
+int arraySize;
 
 typedef struct {
 	int arrayID;
@@ -25,7 +26,7 @@ void *Operate(void* rank) {
 	char server_msg[50];
 
 	// Find a random position in theArray for read or write
-	int pos = rand_r(&seed[my_rank]) % NUM_STR;
+	int pos = rand_r(&seed[my_rank]) % array_size;
 	int randNum = rand_r(&seed[my_rank]) % 20;	// write with 5% probability
 
 	// struct message_t *draft = malloc(sizeof(struct message));
@@ -37,13 +38,13 @@ void *Operate(void* rank) {
 		// Replace sprintf with a write function to server.c
 		draft.RW = WRITE;
 		write(clientFileDescriptor, &draft, sizeof(draft));
-		read(clientFileDescriptor, server_msg, 50);
+		read(clientFileDescriptor, server_msg, NUM_STR);
 	}
 
 	else {
 		// Perform read operation
 		draft.RW = READ;
-		read(clientFileDescriptor, server_msg, 50);
+		read(clientFileDescriptor, server_msg, NUM_STR);
 	}
 
 	printf("Thread %ld: randNum = %i\n", my_rank, randNum);
@@ -63,6 +64,8 @@ int main(int argc, char *argv[])
 	pthread_t* thread_handles;
 	int i;
 	double start, finish, elapsed;
+
+	array_size = (int) argv[2];
 
 	/* Intializes random number generators */
 	seed = malloc(thread_count*sizeof(int));

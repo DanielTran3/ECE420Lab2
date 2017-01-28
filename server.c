@@ -9,28 +9,42 @@
 
 #define NUM_STR 1000
 #define STR_LEN 50
+#define READ 0
+#define WRITE 1
 char theArray[NUM_STR][STR_LEN];
 
-void *ServerEcho(void *args)
+typedef struct {
+	int arrayID;
+	int RW;
+} message_t;
+
+void *clientThreadHandler(void *args)
 {
 	int clientFileDescriptor=(int)args;
-	char str[20];
+	message_t draft;
+	char str[50];
 
-	read(clientFileDescriptor,str,20);
-	printf("nreading from client:%s",str);
-	write(clientFileDescriptor,str,20);
-	printf("nechoing back to client");
+	read(clientFileDescriptor, draft, sizeof(draft));
+	if (draft.RW == WRITE) {
+		str = "String " + draft.arrayID + " has been modified by a write request\n";
+		theArray[draft.arrayID] = str;
+	}
+	else {
+		str = theArray[draft.arrayID];
+	}
+	printf("\nsending to client:%s\n",str);
+	write(clientFileDescriptor,str,NUM_STR);
 	close(clientFileDescriptor);
 }
 
 int main(int argc, char *argv[])
 {
-	int array_size = (int) argv[2];
-
 	if (argc != 3) {
 		printf("%s\n", "Invalid number of arguements, please enter 2 inputs");
 		exit(0);
 	}
+
+	int array_size = (int) argv[2];
 
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
@@ -43,21 +57,21 @@ int main(int argc, char *argv[])
 	sock_var.sin_family = AF_INET;
 	if(bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{
-		printf("nsocket has been created");
+		printf("socket has been created\n");
 		listen(serverFileDescriptor,2000);
 		while(1)        //loop infinity
 		{
 			for(i=0; i < 1000; i++)      //can support 1000 clients at a time
 			{
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				printf("nConnected to client %dn",clientFileDescriptor);
-				pthread_create(&t[i],NULL,ServerEcho,(void *)clientFileDescriptor);
+				printf("nConnected to client %d\n",clientFileDescriptor);
+				pthread_create(&t[i],NULL,clientThreadHandler,(void *)clientFileDescriptor);
 			}
 		}
 		close(serverFileDescriptor);
 	}
 	else{
-		printf("nsocket creation failed");
+		printf("socket creation failed\n");
 	}
 	return 0;
 }
