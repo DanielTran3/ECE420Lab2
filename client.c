@@ -10,7 +10,7 @@
 
 #define READ 0
 #define WRITE 1
-#define thread_count 3
+#define thread_count 1000
 #define STR_LEN 50
 
 int *seed;
