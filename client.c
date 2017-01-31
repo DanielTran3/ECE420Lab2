@@ -15,7 +15,7 @@
 
 int *seed;
 int clientFileDescriptor;
-long array_size;
+int array_size;
 
 typedef struct {
 	int arrayID;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	int i;
 	double start, finish, elapsed;
 
-	array_size = (long) argv[2];
+	array_size = atoi(argv[2]);
 
 	/* Intializes random number generators */
 	seed = malloc(thread_count*sizeof(int));

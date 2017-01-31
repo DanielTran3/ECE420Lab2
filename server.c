@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	int array_size = (long) argv[2];
+	int array_size = atoi(argv[2]);
 
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
