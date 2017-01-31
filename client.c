@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 	if(connect((int) clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{
-		printf("Connected to server %dn",clientFileDescriptor);
+		printf("Connected to server %d\n",clientFileDescriptor);
 
 		GET_TIME(start);
 		for (thread = 0; thread < thread_count; thread++)
