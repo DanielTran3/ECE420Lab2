@@ -5,6 +5,7 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<unistd.h>
+#include<pthread.h>
 #include"timer.h"
 
 #define READ 0
@@ -64,7 +65,8 @@ int main(int argc, char *argv[])
 	}
 
 	long       thread;  /* Use long in case of a 64-bit system */
-	pthread_t thread_handles[1000];
+	pthread_t *thread_handles;
+	thread_handles = malloc(1000 * sizeof(pthread_t));
 	int i;
 	double start, finish, elapsed;
 
@@ -89,7 +91,7 @@ int main(int argc, char *argv[])
 		GET_TIME(start);
 		for (thread = 0; thread < thread_count; thread++) {
 			printf("loop : %ld\n", thread);
-			pthread_create(&thread_handles[thread], NULL, Operate, (void*) thread);
+			pthread_create((void *) &thread_handles[thread], NULL, Operate, (void*) thread);
 		}
 
 

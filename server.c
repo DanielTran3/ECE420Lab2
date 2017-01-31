@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
 	long clientFileDescriptor;
 	int i;
-	pthread_t t[1000];
+	pthread_t *t;
+	t = malloc(1000 * sizeof(pthread_t));
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
 	sock_var.sin_port = atoi(argv[1]);
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
 			{
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				printf("Connected to client %ld\n",clientFileDescriptor);
-				pthread_create(&t[i],NULL,clientThreadHandler,(void *) clientFileDescriptor);
+				pthread_create((void *) &t[i], NULL, clientThreadHandler, (void *) clientFileDescriptor);
 			}
 		}
 		close(serverFileDescriptor);
