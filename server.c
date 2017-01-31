@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 			for(i=0; i < 1000; i++)      //can support 1000 clients at a time
 			{
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				printf("nConnected to client %d\n",clientFileDescriptor);
+				printf("Connected to client %ld\n",clientFileDescriptor);
 				pthread_create(&t[i],NULL,clientThreadHandler,(void *) clientFileDescriptor);
 			}
 		}
