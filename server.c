@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	pthread_t t[1000];
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
-	sock_var.sin_port = (long) argv[1];
+	sock_var.sin_port = atoi(argv[1]);
 	sock_var.sin_family = AF_INET;
 	if(bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
 	{

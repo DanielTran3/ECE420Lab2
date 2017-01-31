@@ -64,8 +64,7 @@ int main(int argc, char *argv[])
 	pthread_t* thread_handles;
 	int i;
 	double start, finish, elapsed;
-	long ipAddress = (long) argv[1];
-	printf("%ld\n", ipAddress);
+
 	array_size = (long) argv[2];
 
 	/* Intializes random number generators */
@@ -77,7 +76,7 @@ int main(int argc, char *argv[])
 	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
-	sock_var.sin_port = (int) ipAddress;
+	sock_var.sin_port = atoi(argv[1]);
 	sock_var.sin_family = AF_INET;
 
 	if(connect((int) clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
