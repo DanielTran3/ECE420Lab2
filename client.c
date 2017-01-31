@@ -64,8 +64,7 @@ int main(int argc, char *argv[])
 	}
 
 	long       thread;  /* Use long in case of a 64-bit system */
-	pthread_t *thread_handles;
-	thread_handles = malloc(1000 * sizeof(pthread_t));
+	pthread_t thread_handles[1000];
 	int i;
 	double start, finish, elapsed;
 
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
 		GET_TIME(start);
 		for (thread = 0; thread < thread_count; thread++) {
 			printf("loop : %ld\n", thread);
-			pthread_create(&thread_handles + thread, NULL, Operate, (void*) thread);
+			pthread_create(&thread_handles[thread], NULL, Operate, (void*) thread);
 		}
 
 
@@ -98,7 +97,7 @@ int main(int argc, char *argv[])
 
 		for (thread = 0; thread < thread_count; thread++)
 			printf("HERE2\n");
-			pthread_join(&thread_handles + thread, NULL);
+			pthread_join(thread_handles[thread], NULL);
 		GET_TIME(finish);
 		elapsed = finish - start;
 	 	printf("The elapsed time is %e seconds\n", elapsed);
