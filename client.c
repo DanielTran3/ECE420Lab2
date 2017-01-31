@@ -23,22 +23,20 @@ typedef struct {
 } message_t;
 
 void *Operate(void* rank) {
-	printf("HERE12121\n");
 	long my_rank = (long) rank;
 	char server_msg[50];
-	printf("HERE0\n");
+	printf("Rank: %ld\n", my_rank);
 	// Find a random position in theArray for read or write
 	int pos = rand_r(&seed[my_rank]) % array_size;
 	int randNum = rand_r(&seed[my_rank]) % 20;	// write with 5% probability
 
 	// struct message_t *draft = malloc(sizeof(struct message));
-	printf("HERE0\n");
 	message_t draft;
-	printf("HERE1\n");
 	draft.arrayID = pos;
 	// 5% are write operations, others are reads
 	if (randNum >= 19) {
 		// Replace sprintf with a write function to server.c
+		printf("Rank: %ld WRITE\n", my_rank);
 		draft.RW = WRITE;
 		write(clientFileDescriptor, &draft, sizeof(draft));
 		read(clientFileDescriptor, server_msg, STR_LEN);
@@ -47,7 +45,8 @@ void *Operate(void* rank) {
 	else {
 		// Perform read operation
 		draft.RW = READ;
-		printf("HERE2\n");
+		printf("Rank: %ld READ\n", my_rank);
+
 		read(clientFileDescriptor, server_msg, STR_LEN);
 	}
 
@@ -97,9 +96,10 @@ int main(int argc, char *argv[])
 
 		printf("HERE\n");
 
-		for (thread = 0; thread < thread_count; thread++)
+		for (thread = 0; thread < thread_count; thread++) {
 			printf("HERE2\n");
 			pthread_join(thread_handles[thread], NULL);
+		}
 		GET_TIME(finish);
 		elapsed = finish - start;
 	 	printf("The elapsed time is %e seconds\n", elapsed);
@@ -109,5 +109,6 @@ int main(int argc, char *argv[])
 	else{
 		printf("socket creation failed\n");
 	}
+	free(thread_handles);
 	return 0;
 }
