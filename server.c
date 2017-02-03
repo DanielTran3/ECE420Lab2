@@ -12,7 +12,7 @@
 #define STR_LEN 50
 #define READ 0
 #define WRITE 1
-char *theArray[NUM_STR][STR_LEN];
+char **theArray;
 
 typedef struct {
 	int arrayID;
@@ -30,13 +30,15 @@ void *clientThreadHandler(void *args)
 	printf("-----------------------------------\n");
 	if (draft.RW == WRITE) {
 				
+		snprintf(theArray[draft.arrayID], STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
+		printf("Printing into: %s\n", theArray[draft.arrayID]);
 		snprintf(str, STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
 		//printf("sending to client:%s\n", str);
-		*theArray[draft.arrayID] = str;
+		//theArray[draft.arrayID] = str;
 		printf("sending to client:%s\n", *theArray[draft.arrayID]);
 	}
 	else {
-		str = &theArray[draft.arrayID];
+		*str = *theArray[draft.arrayID];
 	}
 	//printf("sending to client:%s\n", str);
 	write(clientFileDescriptor, str, STR_LEN);
@@ -56,7 +58,16 @@ int main(int argc, char *argv[])
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
 	long clientFileDescriptor;
-	int i;
+	int i, j;
+	theArray = malloc(array_size * sizeof(char *));
+	for (j = 0; j < array_size; j++) {
+		theArray[j] = malloc(50 * sizeof(char));
+		snprintf(theArray[j], STR_LEN, "String %i: the initial value\n", j);
+	}
+	
+	for (j = 0; j < array_size; j++) {
+		printf("%s\n", theArray[j]);
+	}
 	//pthread_t *thread_handles;
 	//thread_handles = malloc(1000 * sizeof(pthread_t));
 	pthread_t thread_handles[1000];
