@@ -29,7 +29,6 @@ void *Operate(void* rank) {
 	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
 		char server_msg[50];
-		printf("Rank: %ld\n", my_rank);
 
 		// Find a random position in theArray for read or write
 		int pos = rand_r(&seed[my_rank]) % array_size;
@@ -57,7 +56,7 @@ void *Operate(void* rank) {
 		read(clientFileDescriptor, server_msg, STR_LEN);
 
 		printf("Thread %ld: randNum = %i\n", my_rank, randNum);
-		printf("%s\n\n", server_msg); // return the value read or written
+		printf("%s\n", server_msg); // return the value read or written
 
 		close(clientFileDescriptor);
 	}
@@ -102,7 +101,6 @@ int main(int argc, char *argv[])
 
 		GET_TIME(start);
 		for (thread = 0; thread < thread_count; thread++) {
-			printf("loop : %ld\n", thread);
 			//if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
 			pthread_create(&thread_handles[thread], NULL, Operate, (void*) thread);
 			//connect((int) clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var));
@@ -112,8 +110,7 @@ int main(int argc, char *argv[])
 			//}
 		}
 
-
-		printf("HERE\n");
+		printf("HERE----------------------------------------------------------------------------------------\n");
 
 		for (thread = 0; thread < thread_count; thread++) {
 			pthread_join(thread_handles[thread], NULL);

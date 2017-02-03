@@ -29,6 +29,7 @@ typedef struct {
 
 char **theArray;
 mylib_rwlock_t *synch_threads;
+int countfda;
 
 void mylib_rwlock_init (mylib_rwlock_t *l) {
 	l -> readers = l -> writer = l -> pending_writers = 0;
@@ -98,19 +99,22 @@ void *clientThreadHandler(void *args)
 		mylib_rwlock_wlock(synch_threads);
 		snprintf(theArray[draft.arrayID], STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
 		printf("Printing into: %s\n", theArray[draft.arrayID]);
-		snprintf(str, STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
+		snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
 		mylib_rwlock_unlock(synch_threads);
 		//printf("sending to client:%s\n", str);
 		//theArray[draft.arrayID] = str;
 	}
 	else {
 		mylib_rwlock_rlock(synch_threads);
-		*str = *theArray[draft.arrayID];
+		snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
 		mylib_rwlock_unlock(synch_threads);	
 	}
 	//printf("sending to client:%s\n", str);
 	write(clientFileDescriptor, str, STR_LEN);
 	printf("Ending threadhandler...\n");
+	// Try to count the number of threads that finish (need mutex lock for countfda)
+	// Have problems with deadlock?
+	// countfda++;
 	close(clientFileDescriptor);
 }
 
