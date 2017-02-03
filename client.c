@@ -14,8 +14,8 @@
 #define STR_LEN 50
 
 int *seed;
-int clientFileDescriptor;
 int array_size;
+struct sockaddr_in sock_var;
 
 typedef struct {
 	int arrayID;
@@ -24,38 +24,46 @@ typedef struct {
 
 void *Operate(void* rank) {
 	long my_rank = (long) rank;
-	char server_msg[50];
-	printf("Rank: %ld\n", my_rank);
-	// Find a random position in theArray for read or write
-	int pos = rand_r(&seed[my_rank]) % array_size;
-	int randNum = rand_r(&seed[my_rank]) % 20;	// write with 5% probability
+	
+	int clientFileDescriptor;
+	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
+	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
+		char server_msg[50];
+		printf("Rank: %ld\n", my_rank);
 
-	// struct message_t *draft = malloc(sizeof(struct message));
-	message_t draft;
-	draft.arrayID = pos;
-	// 5% are write operations, others are reads
-	if (randNum >= 19) {
-		// Replace sprintf with a write function to server.c
-		printf("Rank: %ld WRITE\n", my_rank);
-		draft.RW = WRITE;
-		//write(clientFileDescriptor, &draft, sizeof(draft));
-		//read(clientFileDescriptor, server_msg, STR_LEN);
-	}
+		// Find a random position in theArray for read or write
+		int pos = rand_r(&seed[my_rank]) % array_size;
+		int randNum = rand_r(&seed[my_rank]) % 20;	// write with 5% probability
 
-	else {
-		// Perform read operation
-		draft.RW = READ;
-		printf("Rank: %ld READ\n", my_rank);
+		// struct message_t *draft = malloc(sizeof(struct message));
+		message_t draft;
+		draft.arrayID = pos;
+		// 5% are write operations, others are reads
+		if (randNum >= 19) {
+			// Replace sprintf with a write function to server.c
+			printf("Rank: %ld WRITE\n", my_rank);
+			draft.RW = WRITE;
+			//write(clientFileDescriptor, &draft, sizeof(draft));
+			//read(clientFileDescriptor, server_msg, STR_LEN);
+		}
+		else {
+			// Perform read operation
+			draft.RW = READ;
+			printf("Rank: %ld READ\n", my_rank);
 		
+		}
+
+		write(clientFileDescriptor, &draft, sizeof(draft));
+		read(clientFileDescriptor, server_msg, STR_LEN);
+
+		printf("Thread %ld: randNum = %i\n", my_rank, randNum);
+		printf("%s\n\n", server_msg); // return the value read or written
+
+		close(clientFileDescriptor);
 	}
-
-	write(clientFileDescriptor, &draft, sizeof(draft));
-	read(clientFileDescriptor, server_msg, STR_LEN);
-
-	printf("Thread %ld: randNum = %i\n", my_rank, randNum);
-	printf("%s\n\n", server_msg); // return the value read or written
-
-	close(clientFileDescriptor);
+	else{
+		printf("socket creation failed for %i\n", rank);
+	}
 
 	return NULL;
 }
@@ -68,8 +76,9 @@ int main(int argc, char *argv[])
 	}
 
 	long       thread;  /* Use long in case of a 64-bit system */
-	pthread_t *thread_handles;
-	thread_handles = malloc(1000 * sizeof(pthread_t));
+	//pthread_t *thread_handles;
+	//thread_handles = malloc(1000 * sizeof(pthread_t));
+	pthread_t thread_handles[1000];
 	int i;
 	double start, finish, elapsed;
 
@@ -80,7 +89,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < thread_count; i++)
 		seed[i] = i;
 
-	struct sockaddr_in sock_var;
+	int clientFileDescriptor;
 	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -94,8 +103,13 @@ int main(int argc, char *argv[])
 		GET_TIME(start);
 		for (thread = 0; thread < thread_count; thread++) {
 			printf("loop : %ld\n", thread);
+			//if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
+			pthread_create(&thread_handles[thread], NULL, Operate, (void*) thread);
 			//connect((int) clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var));
-			pthread_create((void *) &thread_handles[thread], NULL, Operate, (void*) thread);
+			//}
+			//else{
+			//	printf("socket creation failed for %i\n", thread);
+			//}
 		}
 
 
@@ -113,6 +127,6 @@ int main(int argc, char *argv[])
 	else{
 		printf("socket creation failed\n");
 	}
-	free(thread_handles);
+	//free(thread_handles);
 	return 0;
 }

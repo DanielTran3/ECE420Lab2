@@ -8,11 +8,11 @@
 #include<pthread.h>
 
 #define NUM_STR 1000
-#define thread_count 2
+#define thread_count 1000
 #define STR_LEN 50
 #define READ 0
 #define WRITE 1
-char theArray[NUM_STR][STR_LEN];
+char *theArray[NUM_STR][STR_LEN];
 
 typedef struct {
 	int arrayID;
@@ -31,12 +31,14 @@ void *clientThreadHandler(void *args)
 	if (draft.RW == WRITE) {
 				
 		snprintf(str, STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
-		theArray[draft.arrayID][0] = *str;
+		//printf("sending to client:%s\n", str);
+		*theArray[draft.arrayID] = str;
+		printf("sending to client:%s\n", *theArray[draft.arrayID]);
 	}
 	else {
-		*str = *theArray[draft.arrayID];
+		str = &theArray[draft.arrayID];
 	}
-	printf("sending to client:%s\n", str);
+	//printf("sending to client:%s\n", str);
 	write(clientFileDescriptor, str, STR_LEN);
 	printf("Ending threadhandler...\n");
 	close(clientFileDescriptor);
@@ -55,8 +57,9 @@ int main(int argc, char *argv[])
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
 	long clientFileDescriptor;
 	int i;
-	pthread_t *thread_handles;
-	thread_handles = malloc(1000 * sizeof(pthread_t));
+	//pthread_t *thread_handles;
+	//thread_handles = malloc(1000 * sizeof(pthread_t));
+	pthread_t thread_handles[1000];
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
 	sock_var.sin_port = atoi(argv[1]);
@@ -81,6 +84,6 @@ int main(int argc, char *argv[])
 		printf("socket creation failed\n");
 	}
 
-	free(thread_handles);
+	//free(thread_handles);
 	return 0;
 }
