@@ -38,20 +38,24 @@ void *Operate(void* rank) {
 		// Replace sprintf with a write function to server.c
 		printf("Rank: %ld WRITE\n", my_rank);
 		draft.RW = WRITE;
-		write(clientFileDescriptor, &draft, sizeof(draft));
-		read(clientFileDescriptor, server_msg, STR_LEN);
+		//write(clientFileDescriptor, &draft, sizeof(draft));
+		//read(clientFileDescriptor, server_msg, STR_LEN);
 	}
 
 	else {
 		// Perform read operation
 		draft.RW = READ;
 		printf("Rank: %ld READ\n", my_rank);
-
-		read(clientFileDescriptor, server_msg, STR_LEN);
+		
 	}
+
+	write(clientFileDescriptor, &draft, sizeof(draft));
+	read(clientFileDescriptor, server_msg, STR_LEN);
 
 	printf("Thread %ld: randNum = %i\n", my_rank, randNum);
 	printf("%s\n\n", server_msg); // return the value read or written
+
+	close(clientFileDescriptor);
 
 	return NULL;
 }
@@ -90,6 +94,7 @@ int main(int argc, char *argv[])
 		GET_TIME(start);
 		for (thread = 0; thread < thread_count; thread++) {
 			printf("loop : %ld\n", thread);
+			//connect((int) clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var));
 			pthread_create((void *) &thread_handles[thread], NULL, Operate, (void*) thread);
 		}
 
@@ -97,7 +102,6 @@ int main(int argc, char *argv[])
 		printf("HERE\n");
 
 		for (thread = 0; thread < thread_count; thread++) {
-			printf("HERE2\n");
 			pthread_join(thread_handles[thread], NULL);
 		}
 		GET_TIME(finish);

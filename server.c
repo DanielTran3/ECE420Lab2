@@ -8,6 +8,7 @@
 #include<pthread.h>
 
 #define NUM_STR 1000
+#define thread_count 2
 #define STR_LEN 50
 #define READ 0
 #define WRITE 1
@@ -20,20 +21,24 @@ typedef struct {
 
 void *clientThreadHandler(void *args)
 {
+	printf("Starting clientthreadhandler:::\n");
 	long clientFileDescriptor = (long)args;
 	message_t draft;
 	char str[STR_LEN];
 
 	read(clientFileDescriptor, &draft, sizeof(draft));
+	printf("-----------------------------------\n");
 	if (draft.RW == WRITE) {
+				
 		snprintf(str, STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
-		*theArray[draft.arrayID] = *str;
+		theArray[draft.arrayID][0] = *str;
 	}
 	else {
 		*str = *theArray[draft.arrayID];
 	}
-	printf("\nsending to client:%s\n",str);
-	write(clientFileDescriptor,str,NUM_STR);
+	printf("sending to client:%s\n", str);
+	write(clientFileDescriptor, str, STR_LEN);
+	printf("Ending threadhandler...\n");
 	close(clientFileDescriptor);
 }
 
@@ -62,9 +67,10 @@ int main(int argc, char *argv[])
 		listen(serverFileDescriptor,2000);
 		while(1)        //loop infinity
 		{
-			for(i=0; i < 1000; i++)      //can support 1000 clients at a time
+			for(i=0; i < thread_count; i++)      //can support 1000 clients at a time
 			{
-				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
+				printf("Loop: %i\n", i);
+				clientFileDescriptor= accept(serverFileDescriptor,NULL,NULL);
 				printf("Connected to client %ld\n",clientFileDescriptor);
 				pthread_create((void *) &thread_handles[i], NULL, clientThreadHandler, (void *) clientFileDescriptor);
 			}
