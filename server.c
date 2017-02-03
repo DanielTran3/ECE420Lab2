@@ -13,9 +13,6 @@
 #define READ 0
 #define WRITE 1
 
-char **theArray;
-
-
 typedef struct {
 	int arrayID;
 	int RW;
@@ -30,7 +27,7 @@ typedef struct {
 	pthread_mutex_t read_write_lock;
 } mylib_rwlock_t;
 
-char theArray[NUM_STR][STR_LEN];
+char **theArray;
 mylib_rwlock_t *synch_threads;
 
 void mylib_rwlock_init (mylib_rwlock_t *l) {
@@ -47,9 +44,10 @@ void mylib_rwlock_rlock(mylib_rwlock_t *l) {
 	pthread_mutex_lock(&(l -> read_write_lock));
 	while ((l -> pending_writers > 0) || (l -> writer > 0)) {
 		pthread_cond_wait(&(l -> readers_proceed), &(l -> read_write_lock));
-		l -> readers ++;
-		pthread_mutex_unlock(&(l -> read_write_lock));
 	}
+	l -> readers ++;
+	pthread_mutex_unlock(&(l -> read_write_lock));
+	
 }
 
 void mylib_rwlock_wlock(mylib_rwlock_t *l) {
