@@ -8,7 +8,7 @@
 #include<pthread.h>
 
 #define NUM_STR 1000
-#define thread_count 1000
+#define thread_count 10
 #define STR_LEN 50
 #define READ 0
 #define WRITE 1
@@ -30,6 +30,7 @@ typedef struct {
 char **theArray;
 mylib_rwlock_t *synch_threads;
 int countfda;
+int threadKill;
 
 void mylib_rwlock_init (mylib_rwlock_t *l) {
 	l -> readers = l -> writer = l -> pending_writers = 0;
@@ -39,8 +40,8 @@ void mylib_rwlock_init (mylib_rwlock_t *l) {
 }
 
 void mylib_rwlock_rlock(mylib_rwlock_t *l) {
-	/* if there is a write lock or pending writers, perform 
-	condition wait, else increment count of readers and grant 
+	/* if there is a write lock or pending writers, perform
+	condition wait, else increment count of readers and grant
 	read lock */
 	pthread_mutex_lock(&(l -> read_write_lock));
 	while ((l -> pending_writers > 0) || (l -> writer > 0)) {
@@ -48,12 +49,12 @@ void mylib_rwlock_rlock(mylib_rwlock_t *l) {
 	}
 	l -> readers ++;
 	pthread_mutex_unlock(&(l -> read_write_lock));
-	
+
 }
 
 void mylib_rwlock_wlock(mylib_rwlock_t *l) {
-	/* if there are readers or writers, increment pending 
-	writers count and wait. On being woken, decrement pending 
+	/* if there are readers or writers, increment pending
+	writers count and wait. On being woken, decrement pending
 	writers count and increment writer count */
 	pthread_mutex_lock(&(l -> read_write_lock));
 	while ((l -> writer > 0) || (l -> readers > 0)) {
@@ -66,9 +67,9 @@ void mylib_rwlock_wlock(mylib_rwlock_t *l) {
 }
 
 void mylib_rwlock_unlock(mylib_rwlock_t *l) {
-	/* if there is a write lock then unlock, else if there 
-	are read locks, decrement count of read locks. If the count 
-	is 0 and there is a pending writer, let it through, else if 
+	/* if there is a write lock then unlock, else if there
+	are read locks, decrement count of read locks. If the count
+	is 0 and there is a pending writer, let it through, else if
 	there are pending readers, let them all go through */
 	pthread_mutex_lock(&(l -> read_write_lock));
 	if (l -> writer > 0) {
@@ -80,7 +81,7 @@ void mylib_rwlock_unlock(mylib_rwlock_t *l) {
 	pthread_mutex_unlock(&(l -> read_write_lock));
 	if ((l -> readers == 0) && (l -> pending_writers > 0)) {
 		pthread_cond_signal(&(l -> writer_proceed));
-	}	
+	}
 	else if (l -> readers > 0) {
 		pthread_cond_broadcast(&(l -> readers_proceed));
 	}
@@ -107,7 +108,7 @@ void *clientThreadHandler(void *args)
 	else {
 		mylib_rwlock_rlock(synch_threads);
 		snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
-		mylib_rwlock_unlock(synch_threads);	
+		mylib_rwlock_unlock(synch_threads);
 	}
 	//printf("sending to client:%s\n", str);
 	write(clientFileDescriptor, str, STR_LEN);
@@ -116,6 +117,7 @@ void *clientThreadHandler(void *args)
 	// Have problems with deadlock?
 	// countfda++;
 	close(clientFileDescriptor);
+	pthread_exit(&threadKill);
 }
 
 int main(int argc, char *argv[])
@@ -136,7 +138,7 @@ int main(int argc, char *argv[])
 		theArray[j] = malloc(50 * sizeof(char));
 		snprintf(theArray[j], STR_LEN, "String %i: the initial value\n", j);
 	}
-	
+
 	for (j = 0; j < array_size; j++) {
 		printf("%s\n", theArray[j]);
 	}
@@ -147,7 +149,7 @@ int main(int argc, char *argv[])
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
 	sock_var.sin_port = atoi(argv[1]);
 	sock_var.sin_family = AF_INET;
-	
+
 	synch_threads = malloc(sizeof(mylib_rwlock_t));
 	mylib_rwlock_init(synch_threads);
 
@@ -164,6 +166,7 @@ int main(int argc, char *argv[])
 				printf("Connected to client %ld\n",clientFileDescriptor);
 				pthread_create((void *) &thread_handles[i], NULL, clientThreadHandler, (void *) clientFileDescriptor);
 			}
+
 		}
 		close(serverFileDescriptor);
 	}

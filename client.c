@@ -10,7 +10,7 @@
 
 #define READ 0
 #define WRITE 1
-#define thread_count 1000
+#define thread_count 10
 #define STR_LEN 50
 
 int *seed;
@@ -24,7 +24,7 @@ typedef struct {
 
 void *Operate(void* rank) {
 	long my_rank = (long) rank;
-	
+
 	int clientFileDescriptor;
 	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
@@ -49,7 +49,7 @@ void *Operate(void* rank) {
 			// Perform read operation
 			draft.RW = READ;
 			printf("Rank: %ld READ\n", my_rank);
-		
+
 		}
 
 		write(clientFileDescriptor, &draft, sizeof(draft));
