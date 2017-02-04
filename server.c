@@ -6,9 +6,10 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<pthread.h>
+#include<string.h>
 
 #define NUM_STR 1000
-#define thread_count 10
+#define thread_count 1000
 #define STR_LEN 50
 #define READ 0
 #define WRITE 1
@@ -31,6 +32,7 @@ char **theArray;
 mylib_rwlock_t *synch_threads;
 int countfda;
 int threadKill;
+pthread_t thread_handles[1000];
 
 void mylib_rwlock_init (mylib_rwlock_t *l) {
 	l -> readers = l -> writer = l -> pending_writers = 0;
@@ -91,6 +93,7 @@ void *clientThreadHandler(void *args)
 {
 	printf("Starting clientthreadhandler:::\n");
 	long clientFileDescriptor = (long)args;
+	//mylib_rwlock_unlock(synch_threads);	
 	message_t draft;
 	char str[STR_LEN];
 
@@ -144,7 +147,7 @@ int main(int argc, char *argv[])
 	}
 	//pthread_t *thread_handles;
 	//thread_handles = malloc(1000 * sizeof(pthread_t));
-	pthread_t thread_handles[1000];
+	//pthread_t thread_handles[1000];
 
 	sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
 	sock_var.sin_port = atoi(argv[1]);
@@ -162,11 +165,19 @@ int main(int argc, char *argv[])
 			for(i=0; i < thread_count; i++)      //can support 1000 clients at a time
 			{
 				printf("Loop: %i\n", i);
+				//mylib_rwlock_wlock(synch_threads);
 				clientFileDescriptor= accept(serverFileDescriptor,NULL,NULL);
+				//mylib_rwlock_unlock(synch_threads);
+				
 				printf("Connected to client %ld\n",clientFileDescriptor);
 				pthread_create((void *) &thread_handles[i], NULL, clientThreadHandler, (void *) clientFileDescriptor);
+				//mylib_rwlock_unlock(synch_threads);	
 			}
-
+			//memset(thread_handles, 0, sizeof(thread_handles));
+			//close(serverFileDescriptor);
+			//listen(serverFileDescriptor, 2000);
+			//free(synch_threads);
+			//break;
 		}
 		close(serverFileDescriptor);
 	}
