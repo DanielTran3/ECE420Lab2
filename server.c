@@ -9,7 +9,7 @@
 #include<string.h>
 
 #define NUM_STR 1000
-#define thread_count 1000
+#define thread_count 1001
 #define STR_LEN 50
 #define READ 0
 #define WRITE 1
@@ -32,7 +32,7 @@ char **theArray;
 mylib_rwlock_t *synch_threads;
 int countfda;
 int threadKill;
-pthread_t thread_handles[1000];
+//long clientFileDescriptor;
 
 void mylib_rwlock_init (mylib_rwlock_t *l) {
 	l -> readers = l -> writer = l -> pending_writers = 0;
@@ -92,12 +92,12 @@ void mylib_rwlock_unlock(mylib_rwlock_t *l) {
 void *clientThreadHandler(void *args)
 {
 	printf("Starting clientthreadhandler:::\n");
-	long clientFileDescriptor = (long)args;
+	long private_clientFileDescriptor = (long)args;
 	//mylib_rwlock_unlock(synch_threads);	
 	message_t draft;
 	char str[STR_LEN];
 
-	read(clientFileDescriptor, &draft, sizeof(draft));
+	read(private_clientFileDescriptor, &draft, sizeof(draft));
 	printf("-----------------------------------\n");
 	//mylib_rwlock_wlock(synch_threads);
 	if (draft.RW == WRITE) {
@@ -116,13 +116,13 @@ void *clientThreadHandler(void *args)
 	}
 	//printf("sending to client:%s\n", str);
 	//mylib_rwlock_unlock(synch_threads);
-	write(clientFileDescriptor, str, STR_LEN);
+	write(private_clientFileDescriptor, str, STR_LEN);
 	mylib_rwlock_unlock(synch_threads);
 	printf("Ending threadhandler...\n");
 	// Try to count the number of threads that finish (need mutex lock for countfda)
 	// Have problems with deadlock?
 	// countfda++;
-	close(clientFileDescriptor);
+	close(private_clientFileDescriptor);
 	//pthread_exit(&threadKill);
 }
 
@@ -137,8 +137,9 @@ int main(int argc, char *argv[])
 
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
-	long clientFileDescriptor;
+	//long clientFileDescriptor;
 	int i, j;
+	pthread_t thread_handles[1000];
 	theArray = malloc(array_size * sizeof(char *));
 	for (j = 0; j < array_size; j++) {
 		theArray[j] = malloc(50 * sizeof(char));
@@ -169,18 +170,27 @@ int main(int argc, char *argv[])
 			{
 				printf("Loop: %i\n", i);
 				//mylib_rwlock_wlock(synch_threads);
-				clientFileDescriptor= accept(serverFileDescriptor,NULL,NULL);
+				long clientFileDescriptor= accept(serverFileDescriptor,NULL,NULL);
 				//mylib_rwlock_unlock(synch_threads);
 				
 				printf("Connected to client %ld\n",clientFileDescriptor);
 				pthread_create((void *) &thread_handles[i], NULL, clientThreadHandler, (void *) clientFileDescriptor);
+				
 				//mylib_rwlock_unlock(synch_threads);	
+			}
+			printf("INBETWEEN --------------------------------------------\n");
+			int p;
+			for (p = 0; p < thread_count; p++) {
+				printf("WE CHECKING BEFORE\n");
+				pthread_join(thread_handles[p], NULL);
+				printf("WE CHECKING AFTER\n");
 			}
 			//memset(thread_handles, 0, sizeof(thread_handles));
 			//close(serverFileDescriptor);
 			//listen(serverFileDescriptor, 2000);
 			//free(synch_threads);
 			//break;
+			printf("WE FINISHED-----------------------------------------\n");
 		}
 		close(serverFileDescriptor);
 	}

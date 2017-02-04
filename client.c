@@ -10,7 +10,7 @@
 
 #define READ 0
 #define WRITE 1
-#define thread_count 950
+#define thread_count 1000
 #define STR_LEN 50
 
 int *seed;
@@ -53,6 +53,7 @@ void *Operate(void* rank) {
 		}
 
 		write(clientFileDescriptor, &draft, sizeof(draft));
+		sleep(1000);
 		read(clientFileDescriptor, server_msg, STR_LEN);
 
 		printf("Thread %ld: randNum = %i\n", my_rank, randNum);
