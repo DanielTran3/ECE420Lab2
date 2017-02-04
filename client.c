@@ -112,8 +112,9 @@ int main(int argc, char *argv[])
 
 		printf("HERE----------------------------------------------------------------------------------------\n");
 
-		for (thread = 0; thread < thread_count; thread++) {
-			pthread_join(thread_handles[thread], NULL);
+		for (i = 0; i < thread_count; i++) {
+			printf("WE IN HERE\n");
+			pthread_join(thread_handles[i], NULL);
 		}
 		GET_TIME(finish);
 		elapsed = finish - start;

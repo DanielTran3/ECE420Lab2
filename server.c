@@ -99,28 +99,31 @@ void *clientThreadHandler(void *args)
 
 	read(clientFileDescriptor, &draft, sizeof(draft));
 	printf("-----------------------------------\n");
+	//mylib_rwlock_wlock(synch_threads);
 	if (draft.RW == WRITE) {
 		mylib_rwlock_wlock(synch_threads);
 		snprintf(theArray[draft.arrayID], STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
 		printf("Printing into: %s\n", theArray[draft.arrayID]);
 		snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
-		mylib_rwlock_unlock(synch_threads);
+		//mylib_rwlock_unlock(synch_threads);
 		//printf("sending to client:%s\n", str);
 		//theArray[draft.arrayID] = str;
 	}
 	else {
 		mylib_rwlock_rlock(synch_threads);
 		snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
-		mylib_rwlock_unlock(synch_threads);
+		//mylib_rwlock_unlock(synch_threads);
 	}
 	//printf("sending to client:%s\n", str);
+	//mylib_rwlock_unlock(synch_threads);
 	write(clientFileDescriptor, str, STR_LEN);
+	mylib_rwlock_unlock(synch_threads);
 	printf("Ending threadhandler...\n");
 	// Try to count the number of threads that finish (need mutex lock for countfda)
 	// Have problems with deadlock?
 	// countfda++;
 	close(clientFileDescriptor);
-	pthread_exit(&threadKill);
+	//pthread_exit(&threadKill);
 }
 
 int main(int argc, char *argv[])
