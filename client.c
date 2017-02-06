@@ -51,9 +51,9 @@ void *Operate(void* rank) {
 			printf("Rank: %ld READ\n", my_rank);
 
 		}
-
+		printf("----------ArrayID = %d ----RW = %d-------------------------\n", draft.arrayID, draft.RW);
 		write(clientFileDescriptor, &draft, sizeof(draft));
-		sleep(1000);
+		//sleep(1000);
 		read(clientFileDescriptor, server_msg, STR_LEN);
 
 		printf("Thread %ld: randNum = %i\n", my_rank, randNum);

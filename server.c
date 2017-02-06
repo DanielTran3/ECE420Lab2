@@ -98,7 +98,7 @@ void *clientThreadHandler(void *args)
 	char str[STR_LEN];
 
 	read(private_clientFileDescriptor, &draft, sizeof(draft));
-	printf("-----------------------------------\n");
+	printf("--ClientFD = %ld ---- ArrayID = %d ----RW = %d-------\n", private_clientFileDescriptor, draft.arrayID, draft.RW);
 	//mylib_rwlock_wlock(synch_threads);
 	if (draft.RW == WRITE) {
 		mylib_rwlock_wlock(synch_threads);
@@ -111,6 +111,7 @@ void *clientThreadHandler(void *args)
 	}
 	else {
 		mylib_rwlock_rlock(synch_threads);
+
 		snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
 		//mylib_rwlock_unlock(synch_threads);
 	}
