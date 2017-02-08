@@ -49,7 +49,7 @@ void *Operate(void* rank) {
 		write(clientFileDescriptor, &draft, sizeof(draft));
 		read(clientFileDescriptor, server_msg, STR_LEN);
 
-		//printf("Client %ld: Recieved : %s\n", my_rank, server_msg); // return the value read or written
+		printf("Client %ld: Recieved : %s\n", my_rank, server_msg); // return the value read or written
 
 		close(clientFileDescriptor);
 	}
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	}
 	GET_TIME(finish);
 	elapsed = finish - start;
- 	//printf("The elapsed time is %e seconds\n", elapsed);
+ 	printf("The elapsed time is %e seconds\n", elapsed);
 	printf("%e\n", elapsed);	
 
 	close(clientFileDescriptor);

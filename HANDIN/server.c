@@ -32,11 +32,11 @@ void *clientThreadHandler(void *args)
 	if (draft.RW == WRITE) {
 		pthread_rwlock_wrlock(&rwlock);
 		snprintf(theArray[draft.arrayID], STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
-		//printf("Recieved Write Request from Client: %ld\n", private_clientFileDescriptor);
+		printf("Recieved Write Request from Client: %ld\n", private_clientFileDescriptor);
 	}
 	else {
 		pthread_rwlock_rdlock(&rwlock);
-		//printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
+		printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
 	}
 	snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
 	write(private_clientFileDescriptor, str, STR_LEN);
