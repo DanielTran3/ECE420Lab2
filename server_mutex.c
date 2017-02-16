@@ -28,20 +28,18 @@ void *clientThreadHandler(void *args)
 {
 	long private_clientFileDescriptor = (long)args;
 	message_t draft;
-	char str[STR_LEN];
 
 	read(private_clientFileDescriptor, &draft, sizeof(draft));
 	if (draft.RW == WRITE) {
 		pthread_mutex_lock(&mutex);
 		snprintf(theArray[draft.arrayID], STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
-		printf("Recieved Write Request from Client: %ld\n", private_clientFileDescriptor);
+		//printf("Recieved Write Request from Client: %ld\n", private_clientFileDescriptor);
 	}
 	else {
 		pthread_mutex_lock(&mutex);
-		printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
+		//printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
 	}
-	snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
-	write(private_clientFileDescriptor, str, STR_LEN);
+	write(private_clientFileDescriptor, theArray[draft.arrayID], STR_LEN);
 	pthread_mutex_unlock(&mutex);
 	close(private_clientFileDescriptor);
 }
@@ -59,10 +57,10 @@ int main(int argc, char *argv[])
 	struct sockaddr_in sock_var;
 	int serverFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
 	int i, j, p;
-	pthread_t thread_handles[1000];
+	pthread_t thread_handles[thread_count];
 	theArray = malloc(array_size * sizeof(char *));
 	for (j = 0; j < array_size; j++) {
-		theArray[j] = malloc(50 * sizeof(char));
+		theArray[j] = malloc(STR_LEN * sizeof(char));
 		snprintf(theArray[j], STR_LEN, "String %i: the initial value\n", j);
 	}
 
@@ -76,7 +74,7 @@ int main(int argc, char *argv[])
 		listen(serverFileDescriptor,2000);
 		while(1)        //loop infinity
 		{
-			for(i=0; i < thread_count; i++)      //can support 1000 clients at a time
+			for(i=0; i < thread_count; i++)      //can support thread_count clients at a time
 			{
 				long clientFileDescriptor= accept(serverFileDescriptor,NULL,NULL);
 				pthread_create((void *) &thread_handles[i], NULL, clientThreadHandler, (void *) clientFileDescriptor);

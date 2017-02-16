@@ -14,7 +14,7 @@
 # Parameters
 Duplicates=100
 # Port Number
-port=3009
+port=2773
 # The number of strings in theArray
 arraysize=10000
 
