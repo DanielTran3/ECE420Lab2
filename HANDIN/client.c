@@ -28,7 +28,7 @@ void *Operate(void* rank) {
 	int clientFileDescriptor;
 	clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
-		char server_msg[50];
+		char server_msg[STR_LEN];
 
 		// Find a random position in theArray for read or write
 		int pos = rand_r(&seed[my_rank]) % array_size;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	}
 
 	long       thread;  /* Use long in case of a 64-bit system */
-	pthread_t thread_handles[1000];
+	pthread_t thread_handles[thread_count];
 	int i;
 	double start, finish, elapsed;
 

@@ -41,8 +41,8 @@ void *clientThreadHandler(void *args)
 		printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
 	}
 	snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
-	pthread_mutex_unlock(&mutex);
 	write(private_clientFileDescriptor, str, STR_LEN);
+	pthread_mutex_unlock(&mutex);
 	close(private_clientFileDescriptor);
 }
 

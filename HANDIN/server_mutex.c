@@ -28,21 +28,19 @@ void *clientThreadHandler(void *args)
 {
 	long private_clientFileDescriptor = (long)args;
 	message_t draft;
-	char str[STR_LEN];
 
 	read(private_clientFileDescriptor, &draft, sizeof(draft));
 	if (draft.RW == WRITE) {
 		pthread_mutex_lock(&mutex);
 		snprintf(theArray[draft.arrayID], STR_LEN, "String %i has been modified by a write request\n", draft.arrayID);
-		//printf("Recieved Write Request from Client: %ld\n", private_clientFileDescriptor);
+		printf("Recieved Write Request from Client: %ld\n", private_clientFileDescriptor);
 	}
 	else {
 		pthread_mutex_lock(&mutex);
-		//printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
+		printf("Recieved Read Request from Client: %ld\n", private_clientFileDescriptor);
 	}
-	snprintf(str, STR_LEN, "%s", theArray[draft.arrayID]);
+	write(private_clientFileDescriptor, theArray[draft.arrayID], STR_LEN);
 	pthread_mutex_unlock(&mutex);
-	write(private_clientFileDescriptor, str, STR_LEN);
 	close(private_clientFileDescriptor);
 }
 
